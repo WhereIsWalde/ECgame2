@@ -1,5 +1,5 @@
 import inspect as py_inspect
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, inspect, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
 from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass
 from sqlalchemy.orm import relationship, declarative_base, DeclarativeBase
 
@@ -8,19 +8,31 @@ from C import *
 class Base(DeclarativeBase, MappedAsDataclass):
     pass
 
+class GameInfo(Base):
+    __tablename__ = "game_info"
+
+    game_id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True, init=False)
+    num_of_rounds: Mapped[int] = mapped_column(Integer, default=20)
+    current_round: Mapped[int] = mapped_column(Integer, default=0)
+    num_of_players: Mapped[int] = mapped_column(Integer, default=0)
+    max_num_of_players: Mapped[int] = mapped_column(Integer, default=12)
+    is_active: Mapped[int] = mapped_column(Integer, default=1)
+
+
 class Decisions(Base):
     __tablename__ = "decisions"
     __table_args__ = (
-        ForeignKeyConstraint(
-            ["game_id", "user_id", "round_id"],
-            ["nations.game_id", "nations.user_id", "nations.round_id"]
-        ),
+        UniqueConstraint("game_id", "user_id", "round_id", name="decisions_uix_game_user_round"),
     )
-    nation = relationship("Nation", back_populates="decisions")
+    #nation = relationship("Nation", back_populates="decisions")
 
-    game_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
-    user_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
-    round_id: Mapped[int] =    mapped_column(Integer, primary_key=True, default= 0)
+    decision_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+
+    nation_id: Mapped[int] = mapped_column(ForeignKey("nations.nation_id"))
+
+    game_id: Mapped[int] =     mapped_column(Integer, default= 0)
+    user_id: Mapped[int] =     mapped_column(Integer, default= 0)
+    round_id: Mapped[int] =    mapped_column(Integer, default= 0)
     
     farm_area_fraction: Mapped[float] =              mapped_column(Float, default= 0.5)
     production_area_fraction: Mapped[float] =        mapped_column(Float, default= 0.5)
@@ -85,30 +97,34 @@ class Decisions(Base):
 class PlayerInfo(Base):
     __tablename__ = "player_info"
 
-    nation = relationship("Nation", back_populates="player_info")
+    #nation = relationship("Nation", back_populates="player_info")
 
     game_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
     user_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
     leader_name: Mapped[str] = mapped_column(String(20), default="0")
     nation_name: Mapped[str] = mapped_column(String(20), default="0")
+    #history: Mapped[list["Nation"]] = relationship("Nation", back_populates="player_info")
 
-    
 
 class Nation(Base):
     __tablename__ = "nations"
     __table_args__ = (
+        UniqueConstraint("game_id", "user_id", "round_id", name="uix_game_user_round"),
+        ForeignKeyConstraint(["game_id"], ["game_info.game_id"]),
         ForeignKeyConstraint(
-            ["game_id", "user_id"],
+            ["game_id", "user_id"], 
             ["player_info.game_id", "player_info.user_id"]
         ),
     )
 
-    decisions: Mapped["Decisions"] = relationship("Decisions", back_populates="nation", uselist=False)
-    player_info: Mapped["PlayerInfo"] = relationship("PlayerInfo", back_populates="nation")
+    decisions: Mapped["Decisions"] = relationship("Decisions")
+    player_info: Mapped["PlayerInfo"] = relationship("PlayerInfo")
 
-    game_id: Mapped[int] =     mapped_column(Integer, primary_key=True, index=True, default= 0)
-    user_id: Mapped[int] =     mapped_column(Integer, primary_key=True, index=True, default= 0)
-    round_id: Mapped[int] =    mapped_column(Integer, primary_key=True, index=True, default= 0)
+    nation_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    
+    game_id: Mapped[int] = mapped_column(Integer, default= 0) 
+    user_id: Mapped[int] = mapped_column(Integer, default=0)
+    round_id: Mapped[int] = mapped_column(Integer, default= 0)
 
     total_utility: Mapped[float] =  mapped_column(Float, default= 0.0)
     population: Mapped[float] =     mapped_column(Float, default= 1000.0)
@@ -179,5 +195,3 @@ class Nation(Base):
     def get_HQgoodsPerPopPerYear(self):
         return (self.decisions.resources_distributed_HQgoods / (self.population * 5))
 
-
-    

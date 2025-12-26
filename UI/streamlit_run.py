@@ -3,13 +3,13 @@ import streamlit as st
 login_page = st.Page(
     page="pages/login.py",
     title="Login",
-    icon=":material/account_circle:"
+    icon=":material/account_circle:",
+    default=True
 )
 home_page = st.Page(
     page="pages/home.py",
     title="Home",
-    icon=":material/account_circle:",
-    default=True
+    icon=":material/account_circle:"
 )
 plots_page = st.Page(
     page="pages/plots.py",
@@ -22,8 +22,16 @@ history_page = st.Page(
     icon=":material/account_circle:"
 )
 
-pg = st.navigation(pages=[login_page, home_page, plots_page, history_page])
+if st.user.is_logged_in:
+    pg = st.navigation(pages=[home_page, plots_page, history_page], position="top")
+else:
+    pg = st.navigation(pages= [login_page], position="hidden")
+
 # --- Config ---
 st.set_page_config(layout="wide")
+st.set_page_config(initial_sidebar_state="collapsed")
 # streamlit run .\ui\streamlit_run.py
+if st.sidebar.button("Log out"):
+    st.logout()
+
 pg.run()
