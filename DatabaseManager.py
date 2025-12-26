@@ -39,8 +39,18 @@ class DatabaseManager:
             print("Initiated a new game")
     
     def add_new_player(self, user_id, game_id: int, leader_name: str, nation_name: str):
+        new_player_info = PlayerInfo(game_id=game_id, user_id=user_id, leader_name=leader_name, nation_name=nation_name)
+        new_decisions = Decisions(game_id=game_id, user_id=user_id, round_id=0)
         new_nation = Nation(
-            decisions=Decisions()
+            decisions=new_decisions,
+            player_info=new_player_info,
+            game_id=game_id,
+            user_id=user_id,
+            round_id=0
         )
+        with Session(self.engine) as session:
+            session.add(new_nation)
+            session.commit()
+            print(f"Added a player {user_id} to game {game_id}")
 
 

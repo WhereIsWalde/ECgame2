@@ -26,9 +26,9 @@ class Decisions(Base):
     )
     #nation = relationship("Nation", back_populates="decisions")
 
-    decision_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    decision_id: Mapped[int] = mapped_column(Identity(start=1), primary_key=True, init=False)
 
-    nation_id: Mapped[int] = mapped_column(ForeignKey("nations.nation_id"))
+    nation_id: Mapped[int] = mapped_column(ForeignKey("nations.nation_id"), init=False)
 
     game_id: Mapped[int] =     mapped_column(Integer, default= 0)
     user_id: Mapped[int] =     mapped_column(Integer, default= 0)
@@ -120,7 +120,7 @@ class Nation(Base):
     decisions: Mapped["Decisions"] = relationship("Decisions")
     player_info: Mapped["PlayerInfo"] = relationship("PlayerInfo")
 
-    nation_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
+    nation_id: Mapped[int] = mapped_column(Identity(start=1), primary_key=True, init=False)
     
     game_id: Mapped[int] = mapped_column(Integer, default= 0) 
     user_id: Mapped[int] = mapped_column(Integer, default=0)
