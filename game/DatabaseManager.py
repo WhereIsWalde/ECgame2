@@ -40,7 +40,7 @@ class DatabaseManager:
             session.commit()
             print("Initiated a new game")
     
-    def add_new_player(self, user_id, game_id: int, leader_name: str, nation_name: str):
+    def add_new_player(self, user_id: str, game_id: int, leader_name: str, nation_name: str):
         new_player_info = PlayerInfo(game_id=game_id, user_id=user_id, leader_name=leader_name, nation_name=nation_name)
         new_decisions = Decisions(game_id=game_id, user_id=user_id, round_id=0)
         new_nation = Nation(
@@ -55,7 +55,7 @@ class DatabaseManager:
             session.commit()
             print(f"Added a player {user_id} to game {game_id}")
 
-    def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: int|None = None, round_id: int|None = None) -> pd.DataFrame:
+    def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: str|None = None, round_id: int|None = None) -> pd.DataFrame:
         statement = sqlalchemy.select(Nation)
         if game_id is not None:
             statement = statement.where(Nation.game_id == game_id)
@@ -65,12 +65,14 @@ class DatabaseManager:
             statement = statement.where(Nation.round_id == round_id)
         return pd.read_sql_query(statement, self.engine)
 
-    def fetch_active_game_id(self, user_id) -> int|None:
+    def fetch_active_game_id(self, user_id: str) -> int|None:
         statement = sqlalchemy.select(PlayerInfo.game_id).where(PlayerInfo.user_id == user_id, PlayerInfo.is_active == True)
         with Session(self.engine) as session:
-            game_id: int|None = session.execute(statement).scalar()
+            game_id: int|None = session.execute(statement).scalar_one_or_none()
         return game_id
-    
-    def fetch_player_info_as_pd_dataframe() -> pd.DataFrame:
-        pass
-        
+
+    def fetch_current_round_id(self, game_id: int) -> int|None:
+        statement = sqlalchemy.select(GameInfo.current_round).where(GameInfo.game_id == game_id)
+        with Session(self.engine) as session:
+            round_id: int|None = session.execute(statement).scalar()
+        return round_id

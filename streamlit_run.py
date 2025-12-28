@@ -1,11 +1,16 @@
 import streamlit as st
 from game.DatabaseManager import DatabaseManager
-from st_util import get_manager
+from st_util import get_active_game_id
 
 if not st.user.is_logged_in:
     st.login("auth0")
     # st.user.sub is the unique user_id (str)
 
+join_page = st.Page(
+    page="pages/join.py",
+    title="Join",
+    icon=":material/account_circle:",
+)
 home_page = st.Page(
     page="pages/home.py",
     title="Home",
@@ -23,9 +28,15 @@ history_page = st.Page(
     icon=":material/account_circle:"
 )
 
-pg = st.navigation(pages=[home_page, plots_page, history_page], position="top")
+
+if get_active_game_id(st.user.sub) == None:
+    pg = st.navigation([join_page])
+    st.set_page_config(layout="centered")
+else:
+    pg = st.navigation(pages=[home_page, plots_page, history_page], position="top")
+    st.set_page_config(layout="wide")
+
 # --- Config ---
-st.set_page_config(layout="wide")
 st.set_page_config(initial_sidebar_state="collapsed")
 
 # streamlit run streamlit_run.py

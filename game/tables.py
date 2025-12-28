@@ -30,7 +30,7 @@ class Decisions(Base):
     nation_id: Mapped[int] = mapped_column(ForeignKey("nations.nation_id"), init=False)
 
     game_id: Mapped[int] =     mapped_column(Integer, default= 0)
-    user_id: Mapped[int] =     mapped_column(Integer, default= 0)
+    user_id: Mapped[str] =     mapped_column(String(40), default= "0")
     round_id: Mapped[int] =    mapped_column(Integer, default= 0)
     
     farm_area_fraction: Mapped[float] =              mapped_column(Float, default= 0.5)
@@ -97,7 +97,7 @@ class PlayerInfo(Base):
     __tablename__ = "player_info"
 
     game_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
-    user_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
+    user_id: Mapped[str] =     mapped_column(String(40), primary_key=True, default= "0")
     leader_name: Mapped[str] = mapped_column(String(20), default="0")
     nation_name: Mapped[str] = mapped_column(String(20), default="0")
     is_active: Mapped[bool] =  mapped_column(Boolean, default= True)
@@ -120,7 +120,7 @@ class Nation(Base):
     nation_id: Mapped[int] = mapped_column(Identity(start=1), primary_key=True, init=False)
     
     game_id: Mapped[int] = mapped_column(Integer, default= 0) 
-    user_id: Mapped[int] = mapped_column(Integer, default=0)
+    user_id: Mapped[str] = mapped_column(String(40), default="0")
     round_id: Mapped[int] = mapped_column(Integer, default= 0)
 
     total_utility: Mapped[float] =  mapped_column(Float, default= 0.0)

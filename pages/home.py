@@ -1,8 +1,12 @@
 import streamlit as st
 import pandas as pd
+from st_util import get_nations_data, get_active_game_id
 st.title("Nation's dashboard")
 decision_col, state_col = st.columns([2,1], gap="medium", border=True)
 
+all_nations_df: pd.DataFrame = get_nations_data(game_id=get_active_game_id(user_id=st.user.sub))
+nation_df: pd.DataFrame = all_nations_df[all_nations_df["user_id"] == st.user.sub]
+# TODO Nation's state interface
 with decision_col:
     st.header("Current 5-year plan")
     
