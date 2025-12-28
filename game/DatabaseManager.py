@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from tables import Base, GameInfo, PlayerInfo, Decisions, Nation
+from game.tables import Base, GameInfo, PlayerInfo, Decisions, Nation
 import pandas as pd
 import sqlalchemy
 import oracledb

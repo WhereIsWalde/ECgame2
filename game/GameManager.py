@@ -1,7 +1,7 @@
-from tables import Nation, Decisions
+from game.tables import Nation, Decisions
 import math
 import random
-from C import *
+from game.C import *
 
 
 class GameManager():

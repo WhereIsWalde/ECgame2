@@ -2,7 +2,7 @@ import inspect as py_inspect
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
 from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass, relationship, declarative_base, DeclarativeBase
 
-from C import *
+from game.C import *
 
 class Base(DeclarativeBase, MappedAsDataclass):
     pass
