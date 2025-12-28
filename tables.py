@@ -1,7 +1,6 @@
 import inspect as py_inspect
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
-from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass
-from sqlalchemy.orm import relationship, declarative_base, DeclarativeBase
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
+from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass, relationship, declarative_base, DeclarativeBase
 
 from C import *
 
@@ -16,7 +15,7 @@ class GameInfo(Base):
     current_round: Mapped[int] = mapped_column(Integer, default=0)
     num_of_players: Mapped[int] = mapped_column(Integer, default=0)
     max_num_of_players: Mapped[int] = mapped_column(Integer, default=12)
-    is_active: Mapped[int] = mapped_column(Integer, default=1)
+    is_active: Mapped[bool] =   mapped_column(Boolean, default= True)
 
 
 class Decisions(Base):
@@ -97,13 +96,11 @@ class Decisions(Base):
 class PlayerInfo(Base):
     __tablename__ = "player_info"
 
-    #nation = relationship("Nation", back_populates="player_info")
-
     game_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
     user_id: Mapped[int] =     mapped_column(Integer, primary_key=True, default= 0)
     leader_name: Mapped[str] = mapped_column(String(20), default="0")
     nation_name: Mapped[str] = mapped_column(String(20), default="0")
-    #history: Mapped[list["Nation"]] = relationship("Nation", back_populates="player_info")
+    is_active: Mapped[bool] =  mapped_column(Boolean, default= True)
 
 
 class Nation(Base):

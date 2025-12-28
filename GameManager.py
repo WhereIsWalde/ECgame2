@@ -1,4 +1,4 @@
-from Nation import Nation, Decisions
+from tables import Nation, Decisions
 import math
 import random
 from C import *

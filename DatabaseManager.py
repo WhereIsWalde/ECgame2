@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tables import Base, GameInfo, PlayerInfo, Decisions, Nation
+import pandas as pd
 import sqlalchemy
 import oracledb
 import os
@@ -32,6 +33,7 @@ class DatabaseManager:
         Base.metadata.drop_all(self.engine)
     
     def initiate_new_game(self):
+        ## TODO add some safeguards
         new_game: GameInfo = GameInfo()
         with Session(self.engine) as session:
             session.add(new_game)
@@ -53,4 +55,22 @@ class DatabaseManager:
             session.commit()
             print(f"Added a player {user_id} to game {game_id}")
 
+    def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: int|None = None, round_id: int|None = None) -> pd.DataFrame:
+        statement = sqlalchemy.select(Nation)
+        if game_id is not None:
+            statement = statement.where(Nation.game_id == game_id)
+        if user_id is not None:
+            statement = statement.where(Nation.user_id == user_id)
+        if round_id is not None:
+            statement = statement.where(Nation.round_id == round_id)
+        return pd.read_sql_query(statement, self.engine)
 
+    def fetch_active_game_id(self, user_id) -> int|None:
+        statement = sqlalchemy.select(PlayerInfo.game_id).where(PlayerInfo.user_id == user_id, PlayerInfo.is_active == True)
+        with Session(self.engine) as session:
+            game_id: int|None = session.execute(statement).scalar()
+        return game_id
+    
+    def fetch_player_info_as_pd_dataframe() -> pd.DataFrame:
+        pass
+        
