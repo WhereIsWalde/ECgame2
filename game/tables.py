@@ -1,6 +1,8 @@
 import inspect as py_inspect
+import copy
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
 from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass, relationship, declarative_base, DeclarativeBase
+
 
 from game.C import *
 
@@ -23,7 +25,7 @@ class Decisions(Base):
     __table_args__ = (
         UniqueConstraint("game_id", "user_id", "round_id", name="decisions_uix_game_user_round"),
     )
-    #nation = relationship("Nation", back_populates="decisions")
+    nation: Mapped["Nation"] = relationship("Nation", back_populates="decisions", init=False)
 
     decision_id: Mapped[int] = mapped_column(Identity(start=1), primary_key=True, init=False)
 
@@ -91,6 +93,8 @@ class Decisions(Base):
     def get_resources_distributed(self) -> dict:
         all_vars: dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         return {k.removeprefix("resources_distributed_"): v for k,v in all_vars.items() if k.startswith("resources_distributed")}
+    def increment_round_id(self):
+        self.round_id += 1
 
 
 class PlayerInfo(Base):
@@ -114,7 +118,12 @@ class Nation(Base):
         ),
     )
 
-    decisions: Mapped["Decisions"] = relationship("Decisions")
+    #decisions: Mapped["Decisions"] = relationship("Decisions", cascade="all, delete-orphan", backref="nation")
+    decisions: Mapped["Decisions"] = relationship(
+            "Decisions", 
+            back_populates="nation", # Links to the attribute in Decisions
+            cascade="all, delete-orphan"
+        )
     player_info: Mapped["PlayerInfo"] = relationship("PlayerInfo")
 
     nation_id: Mapped[int] = mapped_column(Identity(start=1), primary_key=True, init=False)
@@ -160,7 +169,16 @@ class Nation(Base):
     @property
     def elec_to_full_capacity_pop(self) -> float:
         return self.population * ELECTRICITY_PER_POP
-
+    @classmethod
+    def elec_to_full_capacity_food(cls, prod_cap_food:float, energy_efficiency_multiplier: float) -> float:
+        return prod_cap_food*BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD * ELECTRICITY_PER_FOOD * energy_efficiency_multiplier
+    @classmethod
+    def elec_to_full_capacity_goods(cls, prod_cap_goods:float, energy_efficiency_multiplier: float) -> float:
+        return prod_cap_goods * ELECTRICITY_PER_GOODS * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS * energy_efficiency_multiplier
+    @classmethod
+    def elec_to_full_capacity_pop(cls, population: float) -> float:
+        return population * ELECTRICITY_PER_POP
+    
     def get_resources(self) -> dict:
         all_vars: dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
         return {k.removeprefix("resources_"): v for k,v in all_vars.items() if k.startswith("resources")}
@@ -191,4 +209,37 @@ class Nation(Base):
         return (self.decisions.resources_distributed_LQgoods /(self.population * 5))
     def get_HQgoodsPerPopPerYear(self):
         return (self.decisions.resources_distributed_HQgoods / (self.population * 5))
+    
+    def increment_round_id(self):
+        self.round_id += 1
+
+    def create_nation_copy(self, increment_round_id: bool = True) -> Nation:
+        data = vars(self).copy()
+        keys_to_remove = [
+            '_sa_instance_state',  # SQLAlchemy internal tracking
+            'nation_id',           # PK to remove
+            'decision_id',         # PK to remove
+            'decisions'            # Relationship (we handle this manually)
+        ]
+        for key in keys_to_remove:
+            data.pop(key, None) # Safe remove if exists
+
+        data_decisions = vars(self.decisions).copy()
+        dec_keys_to_remove = [
+            '_sa_instance_state',  # SQLAlchemy internal tracking
+            'nation_id',           # PK to remove
+            'nation',
+            'decision_id'
+        ]
+        for key in dec_keys_to_remove:
+            data_decisions.pop(key, None) # Safe remove if exists
+        new_decisions = Decisions(**data_decisions)
+        new_nation = Nation(new_decisions, **data)
+
+        if increment_round_id:
+            new_nation.round_id += 1
+            new_nation.decisions.round_id += 1
+        return new_nation
+
+
 

@@ -1,6 +1,6 @@
 import streamlit as st
 from game.DatabaseManager import DatabaseManager
-from st_util import get_active_game_id
+from st_util import get_active_game_id, get_current_round_id
 
 if not st.user.is_logged_in:
     st.login("auth0")
@@ -35,6 +35,8 @@ if get_active_game_id(st.user.sub) == None:
 else:
     pg = st.navigation(pages=[home_page, plots_page, history_page], position="top")
     st.set_page_config(layout="wide")
+    st.session_state["game_id"] = get_active_game_id(user_id=st.user.sub)
+    st.session_state["current_round"] = get_current_round_id(st.session_state.game_id)
 
 # --- Config ---
 st.set_page_config(initial_sidebar_state="collapsed")

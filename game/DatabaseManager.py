@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, make_transient
 from game.tables import Base, GameInfo, PlayerInfo, Decisions, Nation
+from game.GameManager import GameManager
 import pandas as pd
 import sqlalchemy
 import oracledb
@@ -10,6 +11,7 @@ import os
 class DatabaseManager:
     def __init__(self):
         try:
+            self.game_manager = GameManager()
             load_dotenv()
             DB_USER = "ADMIN"
             DB_PASSWORD = os.environ.get("DB_PASSWORD")
@@ -55,6 +57,20 @@ class DatabaseManager:
             session.commit()
             print(f"Added a player {user_id} to game {game_id}")
 
+    def advance_round(self, game_id: int, round_id: int|None = None):
+        if round_id == None:
+            round_id = self.fetch_current_round_id(game_id)
+        list_of_nations: list[Nation] = self._get_list_of_nations(game_id=game_id, round_id=round_id)
+        self.game_manager.compute_round_of_states(list_of_nations)
+        list_of_nations = [nation.create_nation_copy() for nation in list_of_nations]
+        
+        
+        with Session(self.engine) as session:
+            session.add_all(list_of_nations)
+            session.commit()
+
+        self._increment_current_round(game_id=game_id)
+
     def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: str|None = None, round_id: int|None = None) -> pd.DataFrame:
         statement = sqlalchemy.select(Nation)
         if game_id is not None:
@@ -76,3 +92,23 @@ class DatabaseManager:
         with Session(self.engine) as session:
             round_id: int|None = session.execute(statement).scalar()
         return round_id
+    
+    def _get_list_of_nations(self, game_id: int, round_id: int) -> list[Nation]:
+        statement = (sqlalchemy.select(Nation)
+                     .options(selectinload(Nation.decisions))
+                     .options(selectinload(Nation.player_info))
+                     .where(Nation.game_id == game_id, Nation.round_id == round_id)
+        )
+        with Session(self.engine) as session:
+            list_of_nations: list[Nation] = session.execute(statement).scalars().all()
+            return list_of_nations
+
+    def _increment_current_round(self, game_id: int):
+        statement = (
+            sqlalchemy.update(GameInfo)
+            .where(GameInfo.game_id == game_id)
+            .values(current_round = GameInfo.current_round + 1)
+        )
+        with Session(self.engine) as session:
+            session.execute(statement)
+            session.commit()
