@@ -22,7 +22,7 @@ class DatabaseManager:
             connection_url = f"oracle+oracledb://{DB_USER}:{DB_PASSWORD}@{SERVICE_NAME}"
             self.conn = oracledb.connect(user=DB_USER, password=DB_PASSWORD, dsn=DB_CONNECT_STRING)
 
-            self.engine: sqlalchemy.Engine = create_engine("oracle+oracledb://", creator= lambda: self.conn, echo=True)
+            self.engine: sqlalchemy.Engine = create_engine("oracle+oracledb://", creator= lambda: self.conn, echo=False)
             print("Successfully connected to the database")
                     
         except Exception as e:
@@ -71,6 +71,23 @@ class DatabaseManager:
 
         self._increment_current_round(game_id=game_id)
 
+    def save_decisions(self, game_id: int, user_id: str, round_id: int, dec_data: dict) -> bool:
+        statement = (
+            sqlalchemy.update(Decisions)
+            .where(Decisions.game_id == game_id)
+            .where(Decisions.user_id == user_id)
+            .where(Decisions.round_id == round_id)
+            .values(**dec_data)  # Unpack your dictionary directly here
+        )
+        with Session(self.engine) as session:
+            result: sqlalchemy.Result = session.execute(statement)
+            session.commit()
+        
+        if result.rowcount == 0:
+            print("No matching decision found to update.")
+            return False
+        return True
+        
     def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: str|None = None, round_id: int|None = None) -> pd.DataFrame:
         statement = sqlalchemy.select(Nation)
         if game_id is not None:

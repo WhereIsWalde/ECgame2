@@ -1,11 +1,14 @@
 import streamlit as st
 from game.DatabaseManager import DatabaseManager
-from st_util import get_active_game_id, get_current_round_id
+from st_util import get_active_game_id, get_current_round_id, get_manager, get_nations_data
+from dotenv import load_dotenv
+import os
+
 
 if not st.user.is_logged_in:
     st.login("auth0")
     # st.user.sub is the unique user_id (str)
-
+load_dotenv()
 join_page = st.Page(
     page="pages/join.py",
     title="Join",
@@ -27,13 +30,18 @@ history_page = st.Page(
     title="History",
     icon=":material/account_circle:"
 )
+help_page = st.Page(
+    page="pages/help.py",
+    title="Help",
+    icon=":material/help:"
+)
 
 
 if get_active_game_id(st.user.sub) == None:
     pg = st.navigation([join_page])
     st.set_page_config(layout="centered")
 else:
-    pg = st.navigation(pages=[home_page, plots_page, history_page], position="top")
+    pg = st.navigation(pages=[home_page, plots_page, history_page, help_page], position="top")
     st.set_page_config(layout="wide")
     st.session_state["game_id"] = get_active_game_id(user_id=st.user.sub)
     st.session_state["current_round"] = get_current_round_id(st.session_state.game_id)
@@ -42,7 +50,14 @@ else:
 st.set_page_config(initial_sidebar_state="collapsed")
 
 # streamlit run streamlit_run.py
-if st.sidebar.button("Log out"):
+if st.sidebar.button("Log out", type="primary"):
     st.logout()
+
+if st.user.email == os.environ.get("DEV_EMAIL"):
+    if st.sidebar.button("Advance round"):
+        get_manager().advance_round(game_id=st.session_state.game_id, round_id= st.session_state.current_round)
+        get_current_round_id.clear(game_id=st.session_state.game_id)
+        get_nations_data.clear(game_id=st.session_state.game_id)
+        st.rerun()
 
 pg.run()

@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
-from st_util import get_nations_data, get_active_game_id, get_current_round_id
-from game.tables import Nation
+from st_util import get_nations_data, get_active_game_id, get_current_round_id, get_manager
+from game.tables import Nation, Decisions, PlayerInfo
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
-
-st.title("Nation's dashboard")
+from Validator import Validator
 
 def create_chart(df, column, color, chart_type, height = 150):
     chart_data = df[[column]].copy()
@@ -84,13 +83,17 @@ def get_current_data_and_deltas(nation_df: pd.DataFrame):
 
     data = current_nation_df.reset_index(drop=True).to_dict()
     data: dict[str, float] = {key: np.round(ddict.get(0, 0.0), 2) for key, ddict in data.items()}
+    data["user_id"] = nation_df[nation_df["round_id"] == st.session_state.current_round]["user_id"].values[0]
+    data["game_id"] = int(data["game_id"])
+    data["round_id"]= int(data["round_id"])
+    data.pop("nation_id", None)
     return data, deltas
 
 all_nations_df: pd.DataFrame = get_nations_data(game_id=st.session_state.game_id)
 nation_df: pd.DataFrame = all_nations_df[all_nations_df["user_id"] == st.user.sub].copy()
 data, deltas = get_current_data_and_deltas(nation_df=nation_df)
 
-#st.header("Nation")
+st.title(f"Nation's dashboard: Round {data["round_id"]}")
 
 with st.container(border=True):
     state_col1, state_col2, state_col3 = st.columns(3, gap="small", border=True)
@@ -115,9 +118,9 @@ with st.container(border=True):
                                Renewable_electricity = data["prod_cap_renewable_electricity"],
                                Nuclear_electricity = data["prod_cap_nuclear_electricity"]
                                )
-        st.metric("Food: energy need for full capacity", value=np.ceil(Nation.elec_to_full_capacity_food(data["prod_cap_food"], data["energy_efficiency_multiplier"])))
-        st.metric("Goods: energy need for full capacity", value=np.ceil(Nation.elec_to_full_capacity_goods(data["prod_cap_goods"], data["energy_efficiency_multiplier"])))
-        st.metric("Population: energy need for full capacity", value=np.ceil(Nation.elec_to_full_capacity_pop(data["population"])))
+        st.metric("Food: energy need for full capacity", value=np.floor(Nation.calculate_elec_food(data["prod_cap_food"], data["energy_efficiency_multiplier"])))
+        st.metric("Goods: energy need for full capacity", value=np.floor(Nation.calculate_elec_goods(data["prod_cap_goods"], data["energy_efficiency_multiplier"])))
+        st.metric("Population: energy need for full capacity", value=np.ceil(Nation.calculate_elec_pop(data["population"])))
         st.metric("Energy efficiency multiplier", value=data["energy_efficiency_multiplier"], delta=deltas["energy_efficiency_multiplier"])
 
 
@@ -137,40 +140,67 @@ with st.container(border=True):
         st.dataframe(df_prod_cap.round(1))
 
 
-
+# -----------------------------------------#### DECISIONS #### ------------------------------------------
 st.header("Current 5-year plan")
+
+dec_data: dict = {}
 
 with st.form(key="decisions_form"):
     dec_col1, dec_col2, dec_col3 = st.columns(3, gap="small", border=True)
     with dec_col1:
         st.subheader("Area management")
-        farm_area_fraction = st.slider("Farm area fraction", min_value=0.0, max_value=1.0, step = 0.01)
-        production_area_fraction = st.slider("Production area fraction", min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["farm_area_fraction"] = st.slider("Farm area fraction", value=0.5, min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["production_area_fraction"] = st.slider("Production area fraction",value=0.5, min_value=0.0, max_value=1.0, step = 0.01)
         st.subheader("Food management")
-        st.slider("Low quality food fraction", min_value=0.0, max_value=1.0, step = 0.01)
-        st.slider("High quality food fraction", min_value=0.0, max_value=1.0, step = 0.01)
-        st.slider("Specials fraction", min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["LQ_food_production_fraction"] = st.slider("Low quality food fraction",value=0.33, min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["HQ_food_production_fraction"] = st.slider("High quality food fraction",value=0.33 ,min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["specials_production_fraction"] = st.slider("Specials fraction", value = 0.34, min_value=0.0, max_value=1.0, step = 0.01)
         st.subheader("Goods management")
-        st.slider("Low quality goods fraction", min_value=0.0, max_value=1.0, step = 0.01)
-        st.slider("higs quality goods fraction", min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["LQ_goods_production_fraction"] = st.slider("Low quality goods fraction", value=0.5, min_value=0.0, max_value=1.0, step = 0.01)
+        dec_data["HQ_goods_production_fraction"] = st.slider("High quality goods fraction", value=0.5, min_value=0.0, max_value=1.0, step = 0.01)
 
     with dec_col2:
         df_commerce = pd.DataFrame(0, index = ["LQfood", "HQfood", "specials", "LQgoods","HQgoods", "electricity", "fossil fuels"], columns= ["Import", "Export"])
         st.subheader("Commerce")
-        st.data_editor(df_commerce)
+        df_commerce_edited =  st.data_editor(df_commerce)
 
         st.subheader("Investments")
         df_investments = pd.DataFrame(0, index=["food", "goods", "fossil fuels", "renewable_electricity", "nuclear_electricity", "energy_efficiency", "environment", "human services"], columns=["Invest"])
-        st.data_editor(df_investments)
+        df_investments_edited = st.data_editor(df_investments)
     
     with dec_col3:
         st.subheader("Electricity")
-        elec_to_food = st.number_input("Electricity allocated to food", min_value=0, step=10)
-        elec_to_goods = st.number_input("Electricity allocated to goods", min_value=0, step=10)
-        fossil_fuels_burned = st.number_input("Fossil fuels burned", min_value=0, step=10)
+        dec_data["electricity_allocated_food"] = st.number_input("Electricity allocated to food", min_value=0, step=10)
+        dec_data["electricity_allocated_goods"] = st.number_input("Electricity allocated to goods", min_value=0, step=10)
+        dec_data["fossil_fuels_burned"] = st.number_input("Fossil fuels burned", min_value=0, step=10)
 
         st.subheader("Resource distribution")
         df_distribution = pd.DataFrame(0, index=["LQfood", "HQfood", "specials", "LQgoods", "HQgoods"], columns=["distribute"])
-        st.data_editor(df_distribution)
+        df_distribution_edited = st.data_editor(df_distribution)
 
-    st.form_submit_button("Save decisions")
+    if st.form_submit_button("Save decisions"):
+        ## TODO get df_commerce_edited as a disctionary.
+        imports = df_commerce_edited.loc[:, "Import"].to_dict()
+        imports = {("imports_" + key).replace(" ", "_"): value for key, value in imports.items()}
+        exports = df_commerce_edited.loc[:, "Export"].to_dict()
+        exports = {("exports_" + key).replace(" ", "_"): value for key, value in exports.items()}
+
+        distribution = df_distribution_edited.iloc[:, 0].to_dict()
+        distribution = {("resources_distributed_" + key).replace(" ", "_"): value for key,value in distribution.items()}
+
+        investments = df_investments_edited.iloc[:, 0].to_dict()
+        investments = {("investments_" + key).replace(" ", "_"): value for key,value in investments.items()}
+        
+        dec_data = {**dec_data, **distribution, **investments,**imports, **exports}
+        validator = Validator()
+        validated_decisions = Decisions(game_id=data["game_id"], user_id=data["user_id"], round_id=data["round_id"], **dec_data)
+        validated_nation = Nation(decisions=validated_decisions,player_info=PlayerInfo, **data)
+        is_correct, err_text = validator.validate_state(validated_nation)
+        #st.write(dec_data)
+        #st.write(data)
+
+        if is_correct:
+            get_manager().save_decisions(data["game_id"], data["user_id"], data["round_id"], dec_data )
+            st.success("Decision submitted successfully!")
+        else:
+            st.error("Decision values were incorrect, decisions not saved! More info:\n" + err_text)

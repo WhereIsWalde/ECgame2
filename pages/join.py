@@ -1,7 +1,22 @@
 import streamlit as st
 from st_util import get_manager, get_active_game_id
 import time
-st.header("The National Economy Game\nJoin a new game here!")
+
+st.header("Welcome to the National Economy Game!")
+# #FFF8DC
+
+with st.container(border=True):
+    st.markdown(
+    """
+    <div style="font-family: 'Courier New', Courier, monospace; color: #E9DCC9;">
+        Your country is in a very bad position. Previous governments have not put an
+        effort into improving and developing the country. It is up to you to solve the
+        problems that your country is facing and finally improve the living standard
+        of the poor citizens to match that of the developed western democracies.
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 
 with st.form(key="join_game_form"):
     game_id = st.text_input("Game-ID")

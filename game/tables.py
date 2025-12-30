@@ -160,24 +160,24 @@ class Nation(Base):
     prod_cap_environment:           Mapped[float] = mapped_column(Float, default= 300.0)
     prod_cap_human_services:        Mapped[float] = mapped_column(Float, default= 300.0)
 
+    @staticmethod
+    def calculate_elec_food(prod_cap: float, efficiency: float) -> float:
+        return prod_cap * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD * ELECTRICITY_PER_FOOD * efficiency
+    @staticmethod
+    def calculate_elec_goods(prod_cap: float, efficiency: float) -> float:
+        return prod_cap * ELECTRICITY_PER_GOODS * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS * efficiency
+    @staticmethod
+    def calculate_elec_pop(population: float) -> float:
+        return population * ELECTRICITY_PER_POP
     @property
     def elec_to_full_capacity_food(self) -> float:
-        return self.prod_cap_food*BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD * ELECTRICITY_PER_FOOD * self.energy_efficiency_multiplier
+        return self.calculate_elec_food(self.prod_cap_food, self.energy_efficiency_multiplier)
     @property
     def elec_to_full_capacity_goods(self) -> float:
-        return self.prod_cap_goods * ELECTRICITY_PER_GOODS * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS * self.energy_efficiency_multiplier
+        return self.calculate_elec_goods(self.prod_cap_goods, self.energy_efficiency_multiplier)
     @property
     def elec_to_full_capacity_pop(self) -> float:
-        return self.population * ELECTRICITY_PER_POP
-    @classmethod
-    def elec_to_full_capacity_food(cls, prod_cap_food:float, energy_efficiency_multiplier: float) -> float:
-        return prod_cap_food*BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD * ELECTRICITY_PER_FOOD * energy_efficiency_multiplier
-    @classmethod
-    def elec_to_full_capacity_goods(cls, prod_cap_goods:float, energy_efficiency_multiplier: float) -> float:
-        return prod_cap_goods * ELECTRICITY_PER_GOODS * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS * energy_efficiency_multiplier
-    @classmethod
-    def elec_to_full_capacity_pop(cls, population: float) -> float:
-        return population * ELECTRICITY_PER_POP
+        return self.calculate_elec_pop(self.population)
     
     def get_resources(self) -> dict:
         all_vars: dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}

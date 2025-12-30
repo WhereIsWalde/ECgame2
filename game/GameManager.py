@@ -58,7 +58,7 @@ class GameManager():
         total_elecricity_gained = max(total_elecricity_gained, 0)
         return total_elecricity_gained
     def __get_fossil_fuelsToBeProduced(self, state: Nation):
-        return BASE_RESOURCES_PER_PRODUCTION_CAPACITY_ELECTRICITY * state.prod_cap_fossil_fuels
+        return BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOSSIL_FUELS * state.prod_cap_fossil_fuels
 
     def develop_market_prices(self, list_of_states: list[Nation], epsilon: float = 0.01) -> dict:
         if len(list_of_states) == 0:
@@ -88,8 +88,6 @@ class GameManager():
         for state in list_of_states:
             exports: dict = state.decisions.get_exports()
             imports: dict = state.decisions.get_imports()
-            print(exports)
-            print(imports)
             for resource in RESOURCES:
                 net_supply[resource] += exports[resource]
                 net_demand[resource] += imports[resource]
@@ -235,16 +233,19 @@ class GameManager():
 
         def update_electricity_inventory_of_state(state: Nation):
             total_elecricity_gained = self.__get_electricityToBeProduced(state)
-            total_fossils_gained = self.__get_fossil_fuelsToBeProduced(state)
+            state.set_resources(electricity = total_elecricity_gained)
+
+        def update_fossils_inventory_of_state(state: Nation):
             RESOURCES: dict = state.get_resources()
-            state.set_resources(electricity = total_elecricity_gained,
-                                fossil_fuels = RESOURCES["fossil_fuels"] + total_fossils_gained)
-            
+            total_fossils_gained = self.__get_fossil_fuelsToBeProduced(state)
+            state.set_resources(fossil_fuels = RESOURCES["fossil_fuels"] + total_fossils_gained - state.decisions.fossil_fuels_burned)
+
         # Update for all states
         for state in list_of_states:
             update_food_inventory_of_state(state)
             update_goods_inventory_of_state(state)
             update_electricity_inventory_of_state(state)
+            update_fossils_inventory_of_state(state)
 
     def apply_deprication_for_states(self, list_of_states: list[Nation]):
         resource_deprication_coeffs = {
@@ -464,7 +465,7 @@ class GameManager():
         for state in list_of_states:
             reset_decisions_of_state(state)
 
-    def compute_round_of_states(self, list_of_states: list[Nation]) -> list[Nation]:
+    def compute_round_of_states(self, list_of_states: list[Nation]) -> tuple[dict, dict, dict]:
 
         prices, net_supply, net_demand = self.develop_market_prices(list_of_states)
 
@@ -488,4 +489,4 @@ class GameManager():
 
         self.reset_decisions_of_states(list_of_states)
         
-        return list_of_states
+        return prices, net_supply, net_demand
