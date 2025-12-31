@@ -242,4 +242,34 @@ class Nation(Base):
         return new_nation
 
 
+class MarketInfo(Base):
+    __tablename__ = "market_info"
+    __table_args__ = (
+        ForeignKeyConstraint(["game_id"], ["game_info.game_id"]),
+    )
+    game_id: Mapped[int] = mapped_column(Integer, default= 0, primary_key=True) 
+    round_id: Mapped[int] = mapped_column(Integer, default= 0, primary_key=True)
 
+    price_LQfood :Mapped[float] =                    mapped_column(Float, default= 0.0)
+    price_HQfood :Mapped[float] =                    mapped_column(Float, default= 0.0)
+    price_specials :Mapped[float] =                  mapped_column(Float, default= 0.0)
+    price_LQgoods :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    price_HQgoods :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    price_electricity :Mapped[float] =               mapped_column(Float, default= 0.0)
+    price_fossil_fuels :Mapped[float] =              mapped_column(Float, default= 0.0)
+
+    supply_LQfood :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    supply_HQfood :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    supply_specials :Mapped[float] =                 mapped_column(Float, default= 0.0)
+    supply_LQgoods :Mapped[float] =                  mapped_column(Float, default= 0.0)
+    supply_HQgoods :Mapped[float] =                  mapped_column(Float, default= 0.0)
+    supply_electricity :Mapped[float] =              mapped_column(Float, default= 0.0)
+    supply_fossil_fuels :Mapped[float] =             mapped_column(Float, default= 0.0)
+
+    demand_LQfood :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    demand_HQfood :Mapped[float] =                   mapped_column(Float, default= 0.0)
+    demand_specials :Mapped[float] =                 mapped_column(Float, default= 0.0)
+    demand_LQgoods :Mapped[float] =                  mapped_column(Float, default= 0.0)
+    demand_HQgoods :Mapped[float] =                  mapped_column(Float, default= 0.0)
+    demand_electricity :Mapped[float] =              mapped_column(Float, default= 0.0)
+    demand_fossil_fuels :Mapped[float] =             mapped_column(Float, default= 0.0)

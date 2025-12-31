@@ -8,9 +8,12 @@ def get_manager():
 
 @st.cache_data(ttl=86400) 
 def get_nations_data(game_id: int):
-    # We retrieve the cached manager INSIDE this function
     db = get_manager()
     return db.fetch_nations_as_pd_dataframe(game_id=game_id)
+
+@st.cache_data(ttl=86400)
+def get_market_info(game_id: int):
+    return get_manager().fetch_market_info_as_dataframe(game_id=game_id)
 
 @st.cache_data(ttl=86400) 
 def get_active_game_id(user_id: str) -> int|None:

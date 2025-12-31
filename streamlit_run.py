@@ -1,6 +1,6 @@
 import streamlit as st
 from game.DatabaseManager import DatabaseManager
-from st_util import get_active_game_id, get_current_round_id, get_manager, get_nations_data
+from st_util import get_active_game_id, get_current_round_id, get_manager, get_nations_data, get_market_info
 from dotenv import load_dotenv
 import os
 
@@ -58,6 +58,7 @@ if st.user.email == os.environ.get("DEV_EMAIL"):
         get_manager().advance_round(game_id=st.session_state.game_id, round_id= st.session_state.current_round)
         get_current_round_id.clear(game_id=st.session_state.game_id)
         get_nations_data.clear(game_id=st.session_state.game_id)
+        get_market_info.clear(game_id=st.session_state.game_id)
         st.rerun()
 
 pg.run()

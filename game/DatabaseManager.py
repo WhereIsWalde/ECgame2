@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, selectinload, make_transient
-from game.tables import Base, GameInfo, PlayerInfo, Decisions, Nation
+from game.tables import Base, GameInfo, PlayerInfo, Decisions, Nation, MarketInfo
 from game.GameManager import GameManager
 import pandas as pd
 import sqlalchemy
@@ -61,12 +61,16 @@ class DatabaseManager:
         if round_id == None:
             round_id = self.fetch_current_round_id(game_id)
         list_of_nations: list[Nation] = self._get_list_of_nations(game_id=game_id, round_id=round_id)
-        self.game_manager.compute_round_of_states(list_of_nations)
+        ## Computes changes inplace for list_of_nations, returns market_prices, net_suply and demand
+        market_prices, net_supply, net_demand = self.game_manager.compute_round_of_states(list_of_nations)
+        market_prices, net_supply, net_demand = self.__market_prices_supply_demand_to_db_form(market_prices, net_supply, net_demand)
         list_of_nations = [nation.create_nation_copy() for nation in list_of_nations]
         
+        market_info = MarketInfo(game_id=game_id, round_id=round_id,**market_prices, **net_supply, **net_demand)
         
         with Session(self.engine) as session:
             session.add_all(list_of_nations)
+            session.add(market_info)
             session.commit()
 
         self._increment_current_round(game_id=game_id)
@@ -104,6 +108,14 @@ class DatabaseManager:
             game_id: int|None = session.execute(statement).scalar_one_or_none()
         return game_id
 
+    def fetch_market_info_as_dataframe(self, game_id: int, round_id: int = None) -> pd.DataFrame:
+        statement = sqlalchemy.select(MarketInfo).where(MarketInfo.game_id == game_id)
+        if round_id != None:
+            statement = statement.where(MarketInfo.round_id == round_id)
+        return pd.read_sql_query(statement, self.engine)
+        
+        
+
     def fetch_current_round_id(self, game_id: int) -> int|None:
         statement = sqlalchemy.select(GameInfo.current_round).where(GameInfo.game_id == game_id)
         with Session(self.engine) as session:
@@ -129,3 +141,9 @@ class DatabaseManager:
         with Session(self.engine) as session:
             session.execute(statement)
             session.commit()
+
+    def __market_prices_supply_demand_to_db_form(self, market_prices: dict, supply: dict, demand: dict) -> tuple[dict,dict,dict]:
+        market_prices = {"price_" + key: value for key, value in market_prices.items()}
+        supply = {"supply_" + key: value for key, value in supply.items()}
+        demand = {"demand_" + key: value for key, value in demand.items()}
+        return market_prices, supply, demand
