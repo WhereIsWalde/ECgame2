@@ -93,8 +93,11 @@ all_nations_df: pd.DataFrame = get_nations_data(game_id=st.session_state.game_id
 nation_df: pd.DataFrame = all_nations_df[all_nations_df["user_id"] == st.user.sub].copy()
 data, deltas = get_current_data_and_deltas(nation_df=nation_df)
 
-st.title(f"Nation's dashboard: Round {data["round_id"]}")
 
+
+# -------------------------------------------#### DASHBOARD ####------------------------------------------------------
+st.title(f"{nation_df["nation_name"].values[0]} Dashboard: Round {data["round_id"]}")
+#st.write(all_nations_df)
 with st.container(border=True):
     state_col1, state_col2, state_col3 = st.columns(3, gap="small", border=True)
     with state_col1:

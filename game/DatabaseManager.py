@@ -92,14 +92,19 @@ class DatabaseManager:
             return False
         return True
         
-    def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: str|None = None, round_id: int|None = None) -> pd.DataFrame:
-        statement = sqlalchemy.select(Nation)
+    def fetch_nations_as_pd_dataframe(self, game_id: int|None = None, user_id: str|None = None, round_id: int|None = None, merge_PlayerInfo: bool = False) -> pd.DataFrame:
+        if merge_PlayerInfo:
+            statement = (sqlalchemy.select(Nation, PlayerInfo.nation_name, PlayerInfo.leader_name)
+                         .join(PlayerInfo, (Nation.user_id == PlayerInfo.user_id) & (Nation.game_id == PlayerInfo.game_id)))
+        else:
+            statement = sqlalchemy.select(Nation)
         if game_id is not None:
             statement = statement.where(Nation.game_id == game_id)
         if user_id is not None:
             statement = statement.where(Nation.user_id == user_id)
         if round_id is not None:
             statement = statement.where(Nation.round_id == round_id)
+
         return pd.read_sql_query(statement, self.engine)
 
     def fetch_active_game_id(self, user_id: str) -> int|None:
@@ -115,7 +120,6 @@ class DatabaseManager:
         return pd.read_sql_query(statement, self.engine)
         
         
-
     def fetch_current_round_id(self, game_id: int) -> int|None:
         statement = sqlalchemy.select(GameInfo.current_round).where(GameInfo.game_id == game_id)
         with Session(self.engine) as session:

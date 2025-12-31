@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(layout="centered")
-st.header("Documentation of the National Economy Game")
+st.header("National Economy Game: Documentation")
 
 with st.container(border=True):
     st.markdown(

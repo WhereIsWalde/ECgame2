@@ -9,7 +9,7 @@ def get_manager():
 @st.cache_data(ttl=86400) 
 def get_nations_data(game_id: int):
     db = get_manager()
-    return db.fetch_nations_as_pd_dataframe(game_id=game_id)
+    return db.fetch_nations_as_pd_dataframe(game_id=game_id, merge_PlayerInfo=True)
 
 @st.cache_data(ttl=86400)
 def get_market_info(game_id: int):
