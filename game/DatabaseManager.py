@@ -1,8 +1,9 @@
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, selectinload, make_transient
 from game.tables import Base, GameInfo, PlayerInfo, Decisions, Nation, MarketInfo
 from game.GameManager import GameManager
+import streamlit as st
 import pandas as pd
 import sqlalchemy
 import oracledb
@@ -12,14 +13,9 @@ class DatabaseManager:
     def __init__(self):
         try:
             self.game_manager = GameManager()
-            load_dotenv()
             DB_USER = "ADMIN"
-            DB_PASSWORD = os.environ.get("DB_PASSWORD")
-            HOST = "adb.eu-stockholm-1.oraclecloud.com"
-            PORT = "1521"
-            SERVICE_NAME = "ge72a74000425b4_ecgame_tp.adb.oraclecloud.com"
+            DB_PASSWORD = st.secrets.db.DB_PASSWORD
             DB_CONNECT_STRING = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-stockholm-1.oraclecloud.com))(connect_data=(service_name=ge72a74000425b4_ecgame_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
-            connection_url = f"oracle+oracledb://{DB_USER}:{DB_PASSWORD}@{SERVICE_NAME}"
             self.conn = oracledb.connect(user=DB_USER, password=DB_PASSWORD, dsn=DB_CONNECT_STRING)
 
             self.engine: sqlalchemy.Engine = create_engine("oracle+oracledb://", creator= lambda: self.conn, echo=False)

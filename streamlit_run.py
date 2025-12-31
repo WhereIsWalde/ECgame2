@@ -1,14 +1,11 @@
 import streamlit as st
 from game.DatabaseManager import DatabaseManager
 from st_util import get_active_game_id, get_current_round_id, get_manager, get_nations_data, get_market_info
-from dotenv import load_dotenv
-import os
 
 
 if not st.user.is_logged_in:
     st.login("auth0")
     # st.user.sub is the unique user_id (str)
-load_dotenv()
 join_page = st.Page(
     page="pages/join.py",
     title="Join",
@@ -53,7 +50,7 @@ st.set_page_config(initial_sidebar_state="collapsed")
 if st.sidebar.button("Log out", type="primary"):
     st.logout()
 
-if st.user.email == os.environ.get("DEV_EMAIL"):
+if st.user.email == st.secrets.db.DEV_EMAIL:
     if st.sidebar.button("Advance round"):
         get_manager().advance_round(game_id=st.session_state.game_id, round_id= st.session_state.current_round)
         get_current_round_id.clear(game_id=st.session_state.game_id)
