@@ -44,10 +44,10 @@ class ElectricityUse:
     PER_POP: float = 0.2
 
 class ResourceProduction:
-    FOOD_PER_PROD_CAP = 28
+    FOOD_PER_PROD_CAP = 22
     GOODS_PER_PROD_CAP = 20
-    ELECTRICITY_PER_PROD_CAP = 50
-    FOSSIL_FUELS_PER_PROD_CAP = 22
+    ELECTRICITY_PER_PROD_CAP = 25
+    FOSSIL_FUELS_PER_PROD_CAP = 18
 
 class Investment:
     FOOD_PROD_CAP_INCREASE_PER_GOOD = 0.5

@@ -5,15 +5,14 @@ from time import sleep
 
 
 if not st.user.is_logged_in:
-    with st.spinner(""):
-        container = st.empty()
-        for i in range(5, 0, -1):
-            container.header(f"⏳ Sending you to authenticate through Auth0 in {i}s")
-            sleep(1.0)
-        st.login("auth0")
-        st.header("Welcome to the National Economy Game")
-        st.stop()
-    # st.user.sub is the unique user_id (str)
+    st.header("Welcome to the National Economy Game")
+    container = st.empty()
+    for i in range(5, 0, -1):
+        container.header(f"⏳ Sending you to authenticate through Auth0 in {i}s")
+        sleep(1.0)
+    st.login("auth0")
+    st.stop()
+# st.user.sub is the unique user_id (str)
 join_page = st.Page(
     page="pages/join.py",
     title="Join",
