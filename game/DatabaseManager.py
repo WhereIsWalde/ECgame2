@@ -9,13 +9,14 @@ import sqlalchemy
 import oracledb
 import os
 
+
 class DatabaseManager:
     def __init__(self):
         try:
             self.game_manager = GameManager()
             DB_USER = "ADMIN"
             DB_PASSWORD = st.secrets.db.DB_PASSWORD
-            DB_CONNECT_STRING = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-stockholm-1.oraclecloud.com))(connect_data=(service_name=ge72a74000425b4_ecgame_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
+            DB_CONNECT_STRING = st.secrets.db.DB_CONNECT_STRING
             self.conn = oracledb.connect(user=DB_USER, password=DB_PASSWORD, dsn=DB_CONNECT_STRING)
 
             self.engine: sqlalchemy.Engine = create_engine("oracle+oracledb://", creator= lambda: self.conn, echo=False)
