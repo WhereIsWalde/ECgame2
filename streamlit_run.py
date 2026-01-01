@@ -1,13 +1,15 @@
 import streamlit as st
 #from game.DatabaseManager import DatabaseManager
 from st_util import get_active_game_id, get_current_round_id, get_manager, get_nations_data, get_market_info
+from time import sleep
 
 
 if not st.user.is_logged_in:
-    st.login("auth0")
-    st.header("Welcome to the National Economy Game")
-    st.write("Sending you to authenticate through Auth0...")
-    st.stop()
+    with st.spinner("Sending you to authenticate through Auth0..."):
+        sleep(1.5)
+        st.login("auth0")
+        st.header("Welcome to the National Economy Game")
+        st.stop()
     # st.user.sub is the unique user_id (str)
 join_page = st.Page(
     page="pages/join.py",
