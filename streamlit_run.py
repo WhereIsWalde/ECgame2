@@ -5,8 +5,11 @@ from time import sleep
 
 
 if not st.user.is_logged_in:
-    with st.spinner("Sending you to authenticate through Auth0..."):
-        sleep(1.5)
+    with st.spinner(""):
+        container = st.empty()
+        for i in range(5, 0, -1):
+            container.header(f"⏳ Sending you to authenticate through Auth0 in {i}s")
+            sleep(1.0)
         st.login("auth0")
         st.header("Welcome to the National Economy Game")
         st.stop()
