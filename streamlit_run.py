@@ -5,6 +5,8 @@ from st_util import get_active_game_id, get_current_round_id, get_manager, get_n
 
 if not st.user.is_logged_in:
     st.login("auth0")
+    st.header("Welcome to the National Economy Game")
+    st.write("Sending you to authenticate through Auth0...")
     st.stop()
     # st.user.sub is the unique user_id (str)
 join_page = st.Page(
