@@ -56,6 +56,7 @@ st.set_page_config(initial_sidebar_state="collapsed")
 # streamlit run streamlit_run.py
 if st.sidebar.button("Log out", type="primary"):
     st.logout()
+    st.stop()
 
 if st.user.email == st.secrets.db.DEV_EMAIL:
     if st.sidebar.button("Advance round"):
