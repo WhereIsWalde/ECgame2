@@ -1,5 +1,5 @@
 import inspect as py_inspect
-import copy
+from __future__ import annotations
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, inspect, ForeignKeyConstraint, UniqueConstraint, Identity
 from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass, relationship, declarative_base, DeclarativeBase
 
