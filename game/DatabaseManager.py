@@ -110,12 +110,11 @@ class DatabaseManager:
             game_id: int|None = session.execute(statement).scalar_one_or_none()
         return game_id
 
-    def fetch_market_info_as_dataframe(self, game_id: int, round_id: int = None) -> pd.DataFrame:
+    def fetch_market_info_as_dataframe(self, game_id: int, round_id: int|None = None) -> pd.DataFrame:
         statement = sqlalchemy.select(MarketInfo).where(MarketInfo.game_id == game_id)
         if round_id != None:
             statement = statement.where(MarketInfo.round_id == round_id)
         return pd.read_sql_query(statement, self.engine)
-        
         
     def fetch_current_round_id(self, game_id: int) -> int|None:
         statement = sqlalchemy.select(GameInfo.current_round).where(GameInfo.game_id == game_id)
@@ -123,14 +122,14 @@ class DatabaseManager:
             round_id: int|None = session.execute(statement).scalar()
         return round_id
     
-    def _get_list_of_nations(self, game_id: int, round_id: int) -> list[Nation]:
+    def _get_list_of_nations(self, game_id: int, round_id: int|None) -> list[Nation]:
         statement = (sqlalchemy.select(Nation)
                      .options(selectinload(Nation.decisions))
                      .options(selectinload(Nation.player_info))
                      .where(Nation.game_id == game_id, Nation.round_id == round_id)
         )
         with Session(self.engine) as session:
-            list_of_nations: list[Nation] = session.execute(statement).scalars().all()
+            list_of_nations = list(session.execute(statement).scalars().all())
             return list_of_nations
 
     def _increment_current_round(self, game_id: int):

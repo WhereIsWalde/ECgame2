@@ -1,12 +1,60 @@
-## Game constants
-ELECTRICITY_PER_FOOD: float = 0.3
-ELECTRICITY_PER_GOODS: float = 0.8
-ELECTRICITY_PER_POP: float = 0.2
+#### Game constants
 
+class NationStart:
+    """All starting values for a new Nation entity."""
 
-ELECTRICITY_PER_GOODS: float = 0.8
+    # Base Stats (Level 1)
+    UTILITY = 0.0
+    POPULATION = 1000.0
+    DEATH_RATE = 10.0
+    BIRTH_RATE = 100.0
+    WEALTH = 0.0
 
-BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD = 28
-BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS = 20
-BASE_RESOURCES_PER_PRODUCTION_CAPACITY_ELECTRICITY = 50
-BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOSSIL_FUELS = 22
+    class Modifiers:
+        """Environmental and efficiency modifiers."""
+        ENVIRONMENT_QUALITY = 4.0
+        ENERGY_EFFICIENCY = 1.0
+        EFFECT_OF_TRADE_ON_DEVELOPEMENT = 1.0
+        HUMAN_SERVICES_CAPITAL = 2.0
+
+    class Resources:
+        """Starting resource stockpiles."""
+        LQ_FOOD = 400.0
+        HQ_FOOD = 80.0
+        SPECIALS = 200.0
+        LQ_GOODS = 980.0
+        HQ_GOODS = 150.0
+        ELECTRICITY = 500.0
+        FOSSIL_FUELS = 200.0
+
+    class ProdCaps:
+        """Starting production capacities."""
+        FOOD = 88.0
+        GOODS = 45.0
+        FOSSIL_FUELS = 130.0
+        RENEWABLE_ELEC = 0.0
+        NUCLEAR_ELEC = 0.0
+        ENERGY_EFFICIENCY = 0.0
+        ENVIRONMENT = 0.0
+        HUMAN_SERVICES = 0.0
+
+class ElectricityUse:
+    PER_UNIT_FOOD_PRODUCED: float = 0.3
+    PER_UNIT_GOODS_PRODUCED: float = 0.8
+    PER_POP: float = 0.2
+
+class ResourceProduction:
+    FOOD_PER_PROD_CAP = 28
+    GOODS_PER_PROD_CAP = 20
+    ELECTRICITY_PER_PROD_CAP = 50
+    FOSSIL_FUELS_PER_PROD_CAP = 22
+
+class Investment:
+    FOOD_PROD_CAP_INCREASE_PER_GOOD = 0.5
+    GOODS_PROD_CAP_INCREASE_PER_GOOD = 0.5
+    FOSSIL_FUELS_PROD_CAP_INCREASE_PER_GOOD = 1.0
+    RENEWABLE_ELEC_PROD_CAP_INCREASE_PER_GOOD = 1.0
+    NUCLEAR_ELEC_PROD_CAP_INCREASE_PER_GOOD = 1.0
+    ENERGY_EFFICIENCY_PROD_CAP_INCREASE_PER_GOOD = 1.0
+    ENVIRONMENT_PROD_CAP_INCREASE_PER_GOOD = 1.0
+    HUMAN_SERVICES_PROD_CAP_INCREASE_PER_GOOD = 1.0

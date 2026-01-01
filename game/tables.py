@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, insp
 from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass, relationship, declarative_base, DeclarativeBase
 
 
-from game.C import *
+from game import C
 
 class Base(DeclarativeBase, MappedAsDataclass):
     pass
@@ -131,43 +131,47 @@ class Nation(Base):
     user_id: Mapped[str] = mapped_column(String(40), default="0")
     round_id: Mapped[int] = mapped_column(Integer, default= 0)
 
-    total_utility: Mapped[float] =  mapped_column(Float, default= 0.0)
-    population: Mapped[float] =     mapped_column(Float, default= 1000.0)
-    death_rate: Mapped[float] =     mapped_column(Float, default= 10.0)
-    birth_rate: Mapped[float] =     mapped_column(Float, default= 100.0)
-    wealth: Mapped[float] =         mapped_column(Float, default= 0.0)
+    # Base Stats 
+    total_utility: Mapped[float] =  mapped_column(Float, default=C.NationStart.UTILITY)
+    population: Mapped[float]    =  mapped_column(Float, default=C.NationStart.POPULATION)
+    death_rate: Mapped[float]    =  mapped_column(Float, default=C.NationStart.DEATH_RATE)
+    birth_rate: Mapped[float]    =  mapped_column(Float, default=C.NationStart.BIRTH_RATE)
+    wealth: Mapped[float]        =  mapped_column(Float, default=C.NationStart.WEALTH)
 
-    environment_quality: Mapped[float] =             mapped_column(Float, default= 4.0)
-    energy_efficiency_multiplier: Mapped[float] =    mapped_column(Float, default= 1.0)
-    effect_of_trade_on_developement: Mapped[float] = mapped_column(Float, default= 1.0)
-    human_services_capital: Mapped[float] =          mapped_column(Float, default= 2.0)
+    # Modifiers 
+    environment_quality: Mapped[float]             = mapped_column(Float, default=C.NationStart.Modifiers.ENVIRONMENT_QUALITY)
+    energy_efficiency_multiplier: Mapped[float]    = mapped_column(Float, default=C.NationStart.Modifiers.ENERGY_EFFICIENCY)
+    effect_of_trade_on_developement: Mapped[float] = mapped_column(Float, default=C.NationStart.Modifiers.EFFECT_OF_TRADE_ON_DEVELOPEMENT)
+    human_services_capital: Mapped[float]          = mapped_column(Float, default=C.NationStart.Modifiers.HUMAN_SERVICES_CAPITAL)
 
-    resources_LQfood:        Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_HQfood:        Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_specials:      Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_LQgoods:       Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_HQgoods:       Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_electricity:   Mapped[float] = mapped_column(Float, default= 500.0)
-    resources_fossil_fuels:  Mapped[float] = mapped_column(Float, default= 500.0)
+    # Resources 
+    resources_LQfood:       Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.LQ_FOOD)
+    resources_HQfood:       Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.HQ_FOOD)
+    resources_specials:     Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.SPECIALS)
+    resources_LQgoods:      Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.LQ_GOODS)
+    resources_HQgoods:      Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.HQ_GOODS)
+    resources_electricity:  Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.ELECTRICITY)
+    resources_fossil_fuels: Mapped[float] = mapped_column(Float, default=C.NationStart.Resources.FOSSIL_FUELS)
 
-    prod_cap_food:                  Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_goods:                 Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_fossil_fuels:          Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_renewable_electricity: Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_nuclear_electricity:   Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_energy_efficiency:     Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_environment:           Mapped[float] = mapped_column(Float, default= 300.0)
-    prod_cap_human_services:        Mapped[float] = mapped_column(Float, default= 300.0)
+    # Production Caps
+    prod_cap_food:                  Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.FOOD)
+    prod_cap_goods:                 Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.GOODS)
+    prod_cap_fossil_fuels:          Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.FOSSIL_FUELS)
+    prod_cap_renewable_electricity: Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.RENEWABLE_ELEC)
+    prod_cap_nuclear_electricity:   Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.NUCLEAR_ELEC)
+    prod_cap_energy_efficiency:     Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.ENERGY_EFFICIENCY)
+    prod_cap_environment:           Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.ENVIRONMENT)
+    prod_cap_human_services:        Mapped[float] = mapped_column(Float, default=C.NationStart.ProdCaps.HUMAN_SERVICES)
 
     @staticmethod
     def calculate_elec_food(prod_cap: float, efficiency: float) -> float:
-        return prod_cap * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD * ELECTRICITY_PER_FOOD * efficiency
+        return prod_cap * C.ResourceProduction.FOOD_PER_PROD_CAP * C.ElectricityUse.PER_UNIT_FOOD_PRODUCED * efficiency
     @staticmethod
     def calculate_elec_goods(prod_cap: float, efficiency: float) -> float:
-        return prod_cap * ELECTRICITY_PER_GOODS * BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS * efficiency
+        return prod_cap * C.ResourceProduction.GOODS_PER_PROD_CAP * C.ElectricityUse.PER_UNIT_GOODS_PRODUCED  * efficiency
     @staticmethod
     def calculate_elec_pop(population: float) -> float:
-        return population * ELECTRICITY_PER_POP
+        return population * C.ElectricityUse.PER_POP
     @property
     def elec_to_full_capacity_food(self) -> float:
         return self.calculate_elec_food(self.prod_cap_food, self.energy_efficiency_multiplier)
@@ -196,8 +200,9 @@ class Nation(Base):
             if hasattr(self, attr_name):
                 setattr(self, attr_name, value)
             else: print(f"There's no prod_cap {prod_cap}") 
-    def get_properties(self) -> dict:
-        return {name: getattr(self, name) for name, value in py_inspect.getmembers(type(self), lambda v: isinstance(v, property))}
+    def get_properties(self):
+        return
+    #    return {name: getattr(self, name) for name, value in py_inspect.getmembers(type(self), lambda v: isinstance(v, property))}
     def get_LQfoodPerPopPerYear(self):
         return (self.decisions.resources_distributed_LQfood / (self.population * 5))
     def get_HQfoodPerPopPerYear(self):

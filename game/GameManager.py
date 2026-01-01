@@ -1,7 +1,7 @@
 from game.tables import Nation, Decisions
 import math
 import random
-from game.C import *
+from game import C
 
 
 class GameManager():
@@ -9,7 +9,7 @@ class GameManager():
         self.list_of_states: list[Nation] = []
 
     def __get_foodToBeProduced(self, state: Nation):
-            base_rate = BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOOD
+            base_rate = C.ResourceProduction.FOOD_PER_PROD_CAP
             prod_cap = state.prod_cap_food
             # Effect of environment on good production
             # environment_quality is between 0 and 10
@@ -25,7 +25,7 @@ class GameManager():
             SP_food_gained = total_food_gained * state.decisions.specials_production_fraction / 2
             return LQ_food_gained, HQ_food_gained, SP_food_gained
     def __get_goodsToBeProduced(self, state: Nation):
-        base_rate = BASE_RESOURCES_PER_PRODUCTION_CAPACITY_GOODS
+        base_rate = C.ResourceProduction.GOODS_PER_PROD_CAP
         prod_cap = state.prod_cap_goods
         # HSC_mult: Production is 3% smaller while HSC is less than 7, and then gives 1% productivity per HSC
         # works quadratically on HQ goods
@@ -39,7 +39,7 @@ class GameManager():
         HQ_goods_gained = total_goods_gained * state.decisions.HQ_goods_production_fraction * HSC_mult / 3
         return LQ_goods_gained, HQ_goods_gained
     def __get_electricityToBeProduced(self, state: Nation):
-        base_rate = BASE_RESOURCES_PER_PRODUCTION_CAPACITY_ELECTRICITY
+        base_rate = C.ResourceProduction.ELECTRICITY_PER_PROD_CAP
         prod_cap_rew = state.prod_cap_renewable_electricity
         prod_cap_nuc = state.prod_cap_nuclear_electricity
         
@@ -58,12 +58,12 @@ class GameManager():
         total_elecricity_gained = max(total_elecricity_gained, 0)
         return total_elecricity_gained
     def __get_fossil_fuelsToBeProduced(self, state: Nation):
-        return BASE_RESOURCES_PER_PRODUCTION_CAPACITY_FOSSIL_FUELS * state.prod_cap_fossil_fuels
+        return C.ResourceProduction.FOSSIL_FUELS_PER_PROD_CAP * state.prod_cap_fossil_fuels
 
-    def develop_market_prices(self, list_of_states: list[Nation], epsilon: float = 0.01) -> dict:
-        if len(list_of_states) == 0:
-            print("Empty list of states!")
-            return
+    def develop_market_prices(self, list_of_states: list[Nation], epsilon: float = 0.01) -> tuple[dict, dict, dict]:
+        #if len(list_of_states) == 0:
+        #    print("Empty list of states!")
+        #    return
         # Returns prices Dict[str]: float of resource market prices
         #         net_supply Dict[str]: float 
         #         net_demand Dict[str]: float
@@ -79,11 +79,11 @@ class GameManager():
             "electricity": 2,
             "fossil_fuels": 1.5,
         }
-        RESOURCES: list[str] = BASE_RESOURCE_K.keys()
+        RESOURCES = BASE_RESOURCE_K.keys()
         net_supply = {key: 0 for key in RESOURCES}
         net_demand = {key: 0 for key in RESOURCES}
 
-        prices = {key: 0 for key in RESOURCES}
+        prices = {key: 0.0 for key in RESOURCES}
 
         for state in list_of_states:
             exports: dict = state.decisions.get_exports()
@@ -99,7 +99,7 @@ class GameManager():
 
             price = math.exp(k*(d - s) / (d + s + epsilon))
 
-            prices[resource] = price
+            prices[resource] = float(price)
 
         return prices, net_supply, net_demand
 
@@ -200,7 +200,7 @@ class GameManager():
 
     def update_population_BR_DR_of_states(self, list_of_states: list[Nation]):
         def update_population_of_state(state:Nation):
-            state.population += (state.birth_rate - state.death_rate) / 1000
+            state.population += (state.birth_rate - state.death_rate)
         def update_birth_rate_of_state(state:Nation):
             x,k,x0 = state.human_services_capital, 0.9, 5.5
             state.birth_rate = math.exp(-(k*x-x0))
@@ -278,14 +278,14 @@ class GameManager():
         def apply_investments_of_state(state: Nation):
             # How much does production capacity increase per invested LQgood
             increase_per_investment = {
-                "food": 0.5,
-                "goods": 0.5,
-                "fossil_fuels": 5,
-                "renewable_electricity": 5,
-                "nuclear_electricity": 5,
-                "energy_efficiency": 1,
-                "environment": 1,
-                "human_services": 1
+                "food": C.Investment.FOOD_PROD_CAP_INCREASE_PER_GOOD,
+                "goods": C.Investment.GOODS_PROD_CAP_INCREASE_PER_GOOD,
+                "fossil_fuels": C.Investment.FOSSIL_FUELS_PROD_CAP_INCREASE_PER_GOOD,
+                "renewable_electricity": C.Investment.RENEWABLE_ELEC_PROD_CAP_INCREASE_PER_GOOD,
+                "nuclear_electricity": C.Investment.NUCLEAR_ELEC_PROD_CAP_INCREASE_PER_GOOD,
+                "energy_efficiency": C.Investment.ENERGY_EFFICIENCY_PROD_CAP_INCREASE_PER_GOOD,
+                "environment": C.Investment.ENVIRONMENT_PROD_CAP_INCREASE_PER_GOOD,
+                "human_services": C.Investment.HUMAN_SERVICES_PROD_CAP_INCREASE_PER_GOOD
             }
             updated_prod_caps: dict = {}
             for investment, value in state.decisions.get_investments().items():
@@ -303,8 +303,8 @@ class GameManager():
         def update_energy_efficiency_multiplier_of_state(state: Nation):
             # It is a ratio between weighted average of goods/food production capacity and 
             # electricity eff. production capacity
-            eff_mult = ((state.prod_cap_goods * ELECTRICITY_PER_GOODS
-                                                + state.prod_cap_food * ELECTRICITY_PER_FOOD) / 2 
+            eff_mult = ((state.prod_cap_goods * C.ElectricityUse.PER_UNIT_GOODS_PRODUCED
+                                                + state.prod_cap_food * C.ElectricityUse.PER_UNIT_FOOD_PRODUCED) / 2 
                                                 / (state.prod_cap_energy_efficiency + 0.0001) )
             eff_mult = max(eff_mult, 0.3)
             eff_mult = min(eff_mult, 1.3)
