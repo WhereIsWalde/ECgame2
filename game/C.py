@@ -24,30 +24,30 @@ class NationStart:
         SPECIALS = 200.0
         LQ_GOODS = 980.0
         HQ_GOODS = 150.0
-        ELECTRICITY = 500.0
+        ELECTRICITY = 800.0
         FOSSIL_FUELS = 200.0
 
     class ProdCaps:
         """Starting production capacities."""
         FOOD = 88.0
         GOODS = 45.0
-        FOSSIL_FUELS = 130.0
-        RENEWABLE_ELEC = 0.0
+        FOSSIL_FUELS = 120.0
+        RENEWABLE_ELEC = 30.0
         NUCLEAR_ELEC = 0.0
         ENERGY_EFFICIENCY = 0.0
         ENVIRONMENT = 0.0
         HUMAN_SERVICES = 0.0
 
 class ElectricityUse:
-    PER_UNIT_FOOD_PRODUCED: float = 0.3
-    PER_UNIT_GOODS_PRODUCED: float = 0.8
+    PER_UNIT_FOOD_PRODUCED: float = 0.25
+    PER_UNIT_GOODS_PRODUCED: float = 0.75
     PER_POP: float = 0.2
 
 class ResourceProduction:
-    FOOD_PER_PROD_CAP = 22
-    GOODS_PER_PROD_CAP = 20
-    ELECTRICITY_PER_PROD_CAP = 25
-    FOSSIL_FUELS_PER_PROD_CAP = 18
+    FOOD_PER_PROD_CAP = 12
+    GOODS_PER_PROD_CAP = 10
+    ELECTRICITY_PER_PROD_CAP = 15
+    FOSSIL_FUELS_PER_PROD_CAP = 14
 
 class Investment:
     FOOD_PROD_CAP_INCREASE_PER_GOOD = 0.5
